@@ -1,8 +1,11 @@
 use std::io;
+mod command_history;
 
+use command_history::CommandHistory;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::process;
 fn main() {
+    let mut history = CommandHistory::new(5);
     loop {
         print!("> ");
         if let Err(e) = io::stdout().flush() {
@@ -12,10 +15,19 @@ fn main() {
 
         match read_input(io::stdin()) {
             Ok(input) => {
+                let trimed_input = input.trim();
                 // `exit` to quit
-                if input.trim() == "exit" {
+                if trimed_input == "exit" {
                     break;
                 }
+                // if input is `history`, print history
+                if trimed_input == "history" {
+                    for command in history.get_history() {
+                        println!("{}", command);
+                    }
+                    continue;
+                }
+                history.add(trimed_input.to_string());
                 if let Err(e) = echo_input(&mut io::stdout(), &input) {
                     eprintln!("Error writing to stdout: {}", e);
                     process::exit(1);
